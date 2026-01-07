@@ -22,8 +22,6 @@ Exporteur simple qui expose des métriques Prefect au format Prometheus.
 - `prefect_missing_deployments_total` (Gauge)
   : Nombre de déploiements surveillés manquants (contrôle basé sur la liste fournie via `EXPORTER_CHECK_DEPLOYMENTS`).
 
-Remarque : ces métriques sont exposées sans labels supplémentaires par la version actuelle du code.
-
 ## Configuration
 
 Variables d'environnement principales :
@@ -31,7 +29,7 @@ Variables d'environnement principales :
 
 - `PREFECT_API_URL` : URL de l'API Prefect.
 - `PREFECT_API_AUTH_STRING` : chaîne d'authentification pour l'API Prefect.
-- *autres variables d'environnement pour configurer le client prefect à votre guise.*
+- ... *autres variables d'environnement pour configurer le client prefect à votre guise.*
 
 - `EXPORTER_PORT` : port HTTP exposé (par défaut 8080).
 - `EXPORTER_INTERVAL` : intervalle de collecte en secondes (par défaut 30).
@@ -67,10 +65,3 @@ Accéder aux métriques :
 ```bash
 curl http://localhost:8080/metrics
 ```
-
-## Notes
-
-- Le format et les métriques sont volontairement simples : chaque métrique est mise à jour périodiquement par l'exporter.
-- Si vous souhaitez ajouter des labels (ex. flow_name), il faudra étendre les classes métriques dans `metrics_flow_runs.py` / `metrics_deployment.py`.
-
-Si quelque chose n'est pas clair ou si vous voulez que j'ajoute un exemple Docker Compose ou des instructions de déploiement systemd, dites-le simplement.
