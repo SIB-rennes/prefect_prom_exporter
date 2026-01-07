@@ -1,2 +1,2 @@
-prefect>=2.14.0
+prefect-client==3.6.5
 prometheus-client==0.20.0
