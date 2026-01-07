@@ -1,9 +1,5 @@
 # Prefect Prometheus Exporter
 
-Exporteur de métriques Prefect au format Prometheus.
-
-# Prefect Prometheus Exporter
-
 Exporteur simple qui expose des métriques Prefect au format Prometheus.
 
 ## Métriques exposées
