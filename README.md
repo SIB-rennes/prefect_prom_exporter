@@ -2,69 +2,79 @@
 
 Exporteur de métriques Prefect au format Prometheus.
 
+# Prefect Prometheus Exporter
+
+Exporteur simple qui expose des métriques Prefect au format Prometheus.
+
 ## Métriques exposées
 
-### Flow Runs
-- `prefect_flow_runs_total{flow_name, state}` - Nombre de runs par état
-- `prefect_flow_runs_active{flow_name}` - Runs actifs (RUNNING, PENDING, SCHEDULED)
-- `prefect_flow_runs_success_total{flow_name}` - Compteur de succès
-- `prefect_flow_runs_failed_total{flow_name}` - Compteur d'échecs
+- `prefect_exporter_collect_errors_total` (Counter)
+  : Nombre total d'erreurs survenues lors des collectes.
 
-### Task Runs
-- `prefect_task_runs_total{task_name, flow_name, state}` - Nombre de runs par état
-- `prefect_task_runs_success_total{task_name, flow_name}` - Compteur de succès
-- `prefect_task_runs_failed_total{task_name, flow_name}` - Compteur d'échecs
+- `prefect_flow_runs_total` (Gauge)
+  : Nombre total de flow runs (valeur entière).
 
-### Ressources
-- `prefect_flows_count` - Nombre total de flows
-- `prefect_deployments_count` - Nombre total de déploiements
+- `prefect_flow_runs_successes_total` (Gauge)
+  : Nombre total de flow runs terminés avec succès. États considérés : Completed, Cached.
+
+- `prefect_flow_runs_in_error_total` (Gauge)
+  : Nombre total de flow runs dans un état d'erreur. États considérés : RolledBack, Failed, TimedOut, Crashed, Suspended.
+
+- `prefect_flow_runs_in_warning_total` (Gauge)
+  : Nombre total de flow runs dans un état d'avertissement. États considérés : Cancelling, Cancelled, Paused, Retrying.
+
+- `prefect_missing_deployments_total` (Gauge)
+  : Nombre de déploiements surveillés manquants (contrôle basé sur la liste fournie via `EXPORTER_CHECK_DEPLOYMENTS`).
+
+Remarque : ces métriques sont exposées sans labels supplémentaires par la version actuelle du code.
 
 ## Configuration
 
-Variables d'environnement :
+Variables d'environnement principales :
 
-- `EXPORTER_PORT` - Port HTTP (défaut: 8080)
-- `EXPORTER_INTERVAL` - Intervalle de collecte en secondes (défaut: 30)
-- `LOOKBACK_HOURS` - Fenêtre temporelle en heures (défaut: 24)
-- `LOG_LEVEL` - Niveau de log (défaut: INFO)
-- `PREFECT_API_URL` - URL de l'API Prefect
-- `PREFECT_API_KEY` - Clé d'API Prefect (si nécessaire)
+
+- `PREFECT_API_URL` : URL de l'API Prefect.
+- `PREFECT_API_AUTH_STRING` : chaîne d'authentification pour l'API Prefect.
+- *autres variables d'environnement pour configurer le client prefect à votre guise.*
+
+- `EXPORTER_PORT` : port HTTP exposé (par défaut 8080).
+- `EXPORTER_INTERVAL` : intervalle de collecte en secondes (par défaut 30).
+- `LOG_LEVEL` : niveau de log (`INFO` par défaut).
+- `EXPORTER_CHECK_DEPLOYMENTS` : liste (séparée par des virgules) de noms de flows à vérifier pour l'existence de déploiements. Exemple : `flow-a,flow-b`.
+
+Le client Prefect utilisé par l'exporter s'appuie sur la configuration de Prefect (variables d'environnement ou configuration client). Assurez-vous que l'accès à l'API Prefect est correctement configuré pour l'environnement cible.
 
 ## Utilisation
 
-### Local
+Local (venv) :
 
 ```bash
 pip install -r requirements.txt
-export PREFECT_API_URL=http://localhost:4200/api
+# Exemple : vérifier les déploiements "flow-a" et "flow-b"
+export EXPORTER_CHECK_DEPLOYMENTS=flow-a,flow-b
+export EXPORTER_PORT=8080
 python exporter.py
 ```
 
-### Docker
+Docker :
 
 ```bash
 docker build -t prefect-exporter .
 docker run -p 8080:8080 \
-  -e PREFECT_API_URL=http://prefect:4200/api \
+  -e EXPORTER_CHECK_DEPLOYMENTS="flow-a,flow-b" \
+  -e EXPORTER_INTERVAL=30 \
   prefect-exporter
 ```
 
-### Docker Compose
-
-```yaml
-services:
-  prefect-exporter:
-    image: prefect-exporter
-    ports:
-      - "8080:8080"
-    environment:
-      PREFECT_API_URL: http://prefect:4200/api
-      EXPORTER_INTERVAL: 30
-      LOOKBACK_HOURS: 24
-```
-
-## Accès aux métriques
+Accéder aux métriques :
 
 ```bash
 curl http://localhost:8080/metrics
 ```
+
+## Notes
+
+- Le format et les métriques sont volontairement simples : chaque métrique est mise à jour périodiquement par l'exporter.
+- Si vous souhaitez ajouter des labels (ex. flow_name), il faudra étendre les classes métriques dans `metrics_flow_runs.py` / `metrics_deployment.py`.
+
+Si quelque chose n'est pas clair ou si vous voulez que j'ajoute un exemple Docker Compose ou des instructions de déploiement systemd, dites-le simplement.

@@ -13,3 +13,5 @@ build/
 .coverage
 htmlcov/
 .env
+.envrc
+.vscode/
